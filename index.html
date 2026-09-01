@@ -118,10 +118,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .ring-wrap svg { filter: drop-shadow(0 4px 12px rgba(232,98,122,0.2)); }
 
 /* ── MINI CALENDAR ── */
-.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .cal-month { font-size: 15px; font-weight: 600; color: var(--text); }
 .cal-nav-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text2); }
 .cal-nav-btn:hover { background: var(--rose-light); }
+.cal-today-link { text-align: center; margin-bottom: 10px; }
+.cal-today-link button { background: none; border: none; color: var(--rose); font-size: 11px; font-family: var(--font); cursor: pointer; text-decoration: underline; font-weight: 500; }
 .cal-days-hdr { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 4px; }
 .cal-dh { text-align: center; font-size: 10px; color: var(--text3); font-weight: 500; padding: 4px 0; }
 .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
@@ -133,7 +135,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 }
 .cal-cell:hover { background: var(--rose-light); }
 .cal-cell.empty { pointer-events: none; }
-.cal-cell.today { font-weight: 700; }
+.cal-cell.today { font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--rose); }
 .cal-cell.today::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--rose); }
 .cal-cell.period { background: var(--rose); color: #fff; }
 .cal-cell.period:hover { background: var(--rose-dark); }
@@ -141,6 +143,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .cal-cell.fertile { background: var(--mint-light); color: #2E8A66; }
 .cal-cell.ovulation { background: var(--peach); color: #7A5A00; font-weight: 600; }
 .cal-cell.pred-fertile { background: #EFF7F4; color: var(--mint); }
+.cal-cell.pred-ov { background: #FDF1DA; color: #A0700B; font-weight: 600; }
 .cal-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .leg { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text2); }
 .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -190,7 +193,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .w-btn:hover { background: var(--rose-light); border-color: var(--rose-mid); color: var(--rose); }
 
 /* ── SLEEP ── */
-.sleep-arc { display: flex; justify-content: center; padding: 8px 0; }
 .sleep-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .time-input-group label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 4px; }
 .time-input-group input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--r-sm); background: var(--surface); color: var(--text); font-size: 15px; font-family: var(--font); outline: none; transition: border 0.15s; }
@@ -204,6 +206,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .note-area:focus { border-color: var(--rose); }
 .save-btn { width: 100%; margin-top: 8px; padding: 12px; background: linear-gradient(135deg, var(--rose), var(--rose-dark)); color: #fff; border: none; border-radius: var(--r-sm); font-size: 14px; font-family: var(--font); font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
 .save-btn:hover { opacity: 0.9; }
+.save-btn.secondary { background: var(--surface2); color: var(--rose); border: 1.5px solid var(--rose-mid); }
 .saved-note { background: var(--surface2); border-radius: var(--r-sm); padding: 10px 12px; margin-top: 8px; }
 .saved-note-date { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
 .saved-note-text { font-size: 13px; color: var(--text); line-height: 1.5; }
@@ -256,7 +259,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .screen.active > *:nth-child(5) { animation-delay: 0.16s; }
 
 /* ── TOAST ── */
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 999; transition: transform 0.3s; pointer-events: none; white-space: nowrap; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 999; transition: transform 0.3s; pointer-events: none; white-space: nowrap; max-width: 90%; text-align: center; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -313,7 +316,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
         <div class="hstat-lbl">Days to period</div>
       </div>
       <div class="hstat">
-        <div class="hstat-val" id="hCycleLen">30</div>
+        <div class="hstat-val" id="hCycleLen">—</div>
         <div class="hstat-lbl">Cycle length</div>
       </div>
     </div>
@@ -336,7 +339,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
           </linearGradient>
         </defs>
         <text x="90" y="82" text-anchor="middle" font-family="DM Sans" font-size="30" font-weight="600" fill="#2D1B21" id="ringDay">—</text>
-        <text x="90" y="100" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#7A5A63">of 30 days</text>
+        <text x="90" y="100" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#7A5A63" id="ringTotal">of — days</text>
         <text x="90" y="116" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#B89AA3" id="ringPhase">—</text>
       </svg>
     </div>
@@ -387,6 +390,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
       <div class="cal-month" id="calMonthLabel"></div>
       <button class="cal-nav-btn" onclick="nextMonth()">›</button>
     </div>
+    <div class="cal-today-link"><button onclick="goToToday()">Jump to today</button></div>
     <div class="cal-days-hdr">
       <div class="cal-dh">Su</div><div class="cal-dh">Mo</div><div class="cal-dh">Tu</div>
       <div class="cal-dh">We</div><div class="cal-dh">Th</div><div class="cal-dh">Fr</div><div class="cal-dh">Sa</div>
@@ -396,7 +400,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
       <div class="leg"><div class="leg-dot" style="background:var(--rose)"></div>Period</div>
       <div class="leg"><div class="leg-dot" style="background:#F9C784"></div>Ovulation</div>
       <div class="leg"><div class="leg-dot" style="background:var(--mint)"></div>Fertile</div>
-      <div class="leg"><div class="leg-dot" style="background:var(--rose-light);border:1.5px solid var(--rose-mid)"></div>Predicted</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--rose-light);border:1.5px solid var(--rose-mid)"></div>Predicted period</div>
+      <div class="leg"><div class="leg-dot" style="background:#FDF1DA;border:1.5px solid var(--peach)"></div>Predicted ovulation</div>
+      <div class="leg"><div class="leg-dot" style="background:#EFF7F4;border:1.5px solid var(--mint)"></div>Predicted fertile</div>
     </div>
   </div>
 
@@ -479,6 +485,34 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 
 <!-- ═══════ HEALTH ═══════ -->
 <div class="screen" id="screen-health">
+
+  <div class="card">
+    <div class="card-title">⚙️ Cycle settings</div>
+    <div class="metric-row">
+      <div class="metric-icon">🔄</div>
+      <div class="metric-content">
+        <label>Cycle length override (auto: <span id="autoCycleLen">—</span> days)</label>
+        <input type="number" id="setCycleLen" placeholder="Leave blank for auto" oninput="saveCycleSettings()" />
+      </div>
+      <div class="metric-unit">days</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-icon">🩸</div>
+      <div class="metric-content">
+        <label>Average period length</label>
+        <input type="number" id="setPeriodLen" oninput="saveCycleSettings()" />
+      </div>
+      <div class="metric-unit">days</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-icon">🔮</div>
+      <div class="metric-content">
+        <label>Show predictions for</label>
+        <input type="number" id="setMonthsAhead" oninput="saveCycleSettings()" />
+      </div>
+      <div class="metric-unit">months</div>
+    </div>
+  </div>
 
   <div class="card">
     <div class="card-title">📏 Body metrics</div>
@@ -569,6 +603,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
     <button class="save-btn" onclick="saveMedNotes()" style="margin-top:8px">Save</button>
   </div>
 
+  <div class="card">
+    <div class="card-title">💾 Backup & restore</div>
+    <button class="save-btn" onclick="exportData()">⬇️ Export data (.json)</button>
+    <label style="display:block;margin-top:10px;font-size:11px;color:var(--text3)">Restore from backup file</label>
+    <input type="file" id="importFile" accept="application/json" style="margin-top:6px;width:100%;font-size:12px" onchange="importData(event)" />
+  </div>
+
 </div>
 
 <!-- ═══════ INSIGHTS ═══════ -->
@@ -578,18 +619,19 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
     <div class="card-title">📊 Your cycle summary</div>
     <div class="hero-stats">
       <div class="hstat" style="background:rgba(255,255,255,0.7)">
-        <div class="hstat-val" id="isCycles">3</div>
+        <div class="hstat-val" id="isCycles">—</div>
         <div class="hstat-lbl">Cycles tracked</div>
       </div>
       <div class="hstat" style="background:rgba(255,255,255,0.7)">
-        <div class="hstat-val" id="isAvgLen">30</div>
+        <div class="hstat-val" id="isAvgLen">—</div>
         <div class="hstat-lbl">Avg cycle</div>
       </div>
       <div class="hstat" style="background:rgba(255,255,255,0.7)">
-        <div class="hstat-val">5</div>
+        <div class="hstat-val" id="isPeriodLen">—</div>
         <div class="hstat-lbl">Period days</div>
       </div>
     </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text2)" id="isRangeText"></div>
   </div>
 
   <div class="card">
@@ -607,7 +649,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
       <div class="insight-text">Peak energy, confidence & social drive. Fertile window is open. You may notice clear, stretchy discharge — that's completely normal!</div>
     </div>
     <div class="insight-card lavender">
-      <div class="insight-title">🌙 Luteal (Day 17–30)</div>
+      <div class="insight-title">🌙 Luteal (Day 17+)</div>
       <div class="insight-text">PMS symptoms may appear: bloating, mood swings, cravings. Magnesium (dark chocolate, nuts), gentle yoga, and good sleep help a lot.</div>
     </div>
   </div>
@@ -652,16 +694,21 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 <script>
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_MS = 86400000;
-const CYCLE = 30;
-const PERIOD_LEN = 5;
+const DEFAULT_PERIOD_LEN = 5;
+const DEFAULT_CYCLE_LEN = 28;
 
 // ── STATE ──
+// Real logged period start dates (as told by Abhya): 25 Jul 2026 and 27 Aug 2026,
+// plus earlier estimated history kept for trend/average purposes.
 let state = JSON.parse(localStorage.getItem('abhya_state') || 'null') || {
   periods: [
     new Date(2026,3,26).getTime(),
     new Date(2026,4,25).getTime(),
-    new Date(2026,5,24).getTime()
+    new Date(2026,5,24).getTime(),
+    new Date(2026,6,25).getTime(),
+    new Date(2026,7,27).getTime()
   ],
+  settings: { cycleLenOverride: null, periodLen: DEFAULT_PERIOD_LEN, monthsAhead: 3 },
   water: 0,
   waterDate: '',
   mood: '',
@@ -672,6 +719,7 @@ let state = JSON.parse(localStorage.getItem('abhya_state') || 'null') || {
   todayIntensity: '',
   todayMoodLog: ''
 };
+if(!state.settings) state.settings = { cycleLenOverride: null, periodLen: DEFAULT_PERIOD_LEN, monthsAhead: 3 };
 
 function saveState() { localStorage.setItem('abhya_state', JSON.stringify(state)); }
 
@@ -687,27 +735,45 @@ function fmtDateShort(ts) {
   return d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0,3);
 }
 
-// ── DAY MAP ──
+// ── CYCLE STATS (dynamic, based on real logged dates) ──
+function getCycleStats() {
+  const p = state.periods;
+  const gaps = [];
+  for(let i=1;i<p.length;i++) gaps.push(Math.round((p[i]-p[i-1])/DAYS_MS));
+  const auto = gaps.length ? Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length) : DEFAULT_CYCLE_LEN;
+  const avgLen = state.settings.cycleLenOverride || auto;
+  return { avgLen, autoLen: auto, gaps, shortest: gaps.length?Math.min(...gaps):null, longest: gaps.length?Math.max(...gaps):null };
+}
+function getPeriodLen() { return state.settings.periodLen || DEFAULT_PERIOD_LEN; }
+
+// ── DAY MAP (fixes Aug/Sep+ not showing correctly — uses real gap per past cycle,
+// and the dynamic average for future prediction, instead of a fixed 30-day cycle) ──
 function getDayMap() {
   const map = {};
-  const td = today();
-  state.periods.forEach(ps => {
-    for(let i=0;i<PERIOD_LEN;i++) map[toKey(new Date(ps+i*DAYS_MS))]='period';
-    const ov = new Date(ps+(CYCLE-14)*DAYS_MS);
+  const p = state.periods;
+  const stats = getCycleStats();
+  const periodLen = getPeriodLen();
+
+  p.forEach((ps, idx) => {
+    const cLen = idx < p.length-1 ? Math.round((p[idx+1]-ps)/DAYS_MS) : stats.avgLen;
+    for(let i=0;i<periodLen;i++) map[toKey(new Date(ps+i*DAYS_MS))] = 'period';
+    const ov = new Date(ps + (cLen-14)*DAYS_MS);
     for(let i=-4;i<=1;i++) {
       const k = toKey(new Date(ov.getTime()+i*DAYS_MS));
-      if(!map[k]) map[k] = i===0?'ovulation':'fertile';
+      if(!map[k]) map[k] = i===0 ? 'ovulation' : 'fertile';
     }
   });
-  const last = state.periods[state.periods.length-1];
-  for(let c=1;c<=6;c++) {
-    const ps = new Date(last+c*CYCLE*DAYS_MS);
-    if(ps<=td) continue;
-    for(let i=0;i<PERIOD_LEN;i++) { const k=toKey(new Date(ps.getTime()+i*DAYS_MS)); if(!map[k]) map[k]='predicted'; }
-    const ov = new Date(ps.getTime()+(CYCLE-14)*DAYS_MS);
+
+  const last = p[p.length-1];
+  const monthsAhead = state.settings.monthsAhead || 3;
+  const maxCycles = Math.max(2, Math.ceil((monthsAhead*31)/stats.avgLen) + 1);
+  for(let c=1;c<=maxCycles;c++) {
+    const ps = new Date(last + c*stats.avgLen*DAYS_MS);
+    for(let i=0;i<periodLen;i++) { const k=toKey(new Date(ps.getTime()+i*DAYS_MS)); if(!map[k]) map[k]='predicted'; }
+    const ov = new Date(ps.getTime() + (stats.avgLen-14)*DAYS_MS);
     for(let i=-4;i<=1;i++) {
       const k=toKey(new Date(ov.getTime()+i*DAYS_MS));
-      if(!map[k]) map[k]=i===0?'pred-ov':'pred-fertile';
+      if(!map[k]) map[k]= i===0 ? 'pred-ov' : 'pred-fertile';
     }
   }
   return map;
@@ -715,28 +781,29 @@ function getDayMap() {
 
 // ── PHASE ──
 function getPhase(dayNum) {
-  if(dayNum<=PERIOD_LEN) return {name:'Menstrual Phase',emoji:'🩸',desc:"Your period is here. Rest well, eat iron-rich foods, and be gentle with yourself. Warmth and hydration help. 🌸",color:'#E8627A'};
-  if(dayNum<=13) return {name:'Follicular Phase',emoji:'🌱',desc:"Energy is rising! Your body is preparing a new egg. Great time for planning, new ideas, and staying active. 🌿",color:'#7ECBA9'};
-  if(dayNum<=16) return {name:'Ovulation Phase',emoji:'🌕',desc:"Peak energy, confidence and creativity! You may feel more social and expressive — embrace it! 🌟",color:'#F9C784'};
-  return {name:'Luteal Phase',emoji:'🌙',desc:"Your body is preparing. You might feel more introspective or tired — that's normal and okay. 💛",color:'#C5B8F0'};
+  const periodLen = getPeriodLen();
+  if(dayNum<=periodLen) return {name:'Menstrual Phase',emoji:'🩸',desc:"Your period is here. Rest well, eat iron-rich foods, and be gentle with yourself. Warmth and hydration help. 🌸"};
+  if(dayNum<=13) return {name:'Follicular Phase',emoji:'🌱',desc:"Energy is rising! Your body is preparing a new egg. Great time for planning, new ideas, and staying active. 🌿"};
+  if(dayNum<=16) return {name:'Ovulation Phase',emoji:'🌕',desc:"Peak energy, confidence and creativity! You may feel more social and expressive — embrace it! 🌟"};
+  return {name:'Luteal Phase',emoji:'🌙',desc:"Your body is preparing. You might feel more introspective or tired — that's normal and okay. 💛"};
 }
 
 // ── INIT ──
 function init() {
-  // Top bar date
   const td = today();
   const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   document.getElementById('todayDate').textContent = fmtDate(td.getTime());
   document.getElementById('todayDay').textContent = days[td.getDay()];
-  const hr = td.getHours();
+  const hr = new Date().getHours();
   document.getElementById('greetText').textContent = hr<12?'Good morning,':hr<17?'Good afternoon,':'Good evening,';
 
-  // Log date label
   document.getElementById('logDateLabel').textContent = fmtDate(td.getTime());
 
-  // Water reset if new day
   const todayStr = td.toDateString();
   if(state.waterDate !== todayStr) { state.water=0; state.waterDate=todayStr; saveState(); }
+
+  // Calendar always opens on the real current month (fixes it defaulting to June)
+  calView = { y: td.getFullYear(), m: td.getMonth() };
 
   renderHome();
   renderCalendar();
@@ -744,45 +811,46 @@ function init() {
   renderPastRecords();
   renderSavedLogs();
   loadMetrics();
+  loadCycleSettings();
   calcSleep();
 }
 
 // ── HOME ──
 function renderHome() {
   const td = today();
+  const stats = getCycleStats();
+  const cycleLen = stats.avgLen;
   const last = new Date(state.periods[state.periods.length-1]);
   const dayNum = Math.round((td.getTime()-last.getTime())/DAYS_MS)+1;
-  const next = new Date(last.getTime()+CYCLE*DAYS_MS);
+  const next = new Date(last.getTime()+cycleLen*DAYS_MS);
   const daysLeft = Math.round((next.getTime()-td.getTime())/DAYS_MS);
   const ph = getPhase(dayNum);
 
   document.getElementById('heroPhase').textContent = ph.emoji+' '+ph.name;
   document.getElementById('heroDesc').textContent = ph.desc;
   document.getElementById('hDayNum').textContent = dayNum;
-  document.getElementById('hDaysLeft').textContent = daysLeft>0?daysLeft:'Today!';
-  document.getElementById('hCycleLen').textContent = CYCLE;
+  document.getElementById('hDaysLeft').textContent = daysLeft>0?daysLeft:(daysLeft===0?'Today!':'Overdue');
+  document.getElementById('hCycleLen').textContent = cycleLen;
 
-  // Ring
-  const pct = Math.min(dayNum/CYCLE,1);
+  const pct = Math.min(Math.max(dayNum/cycleLen,0),1);
   const circ = 2*Math.PI*70;
   document.getElementById('cycleRing').style.strokeDashoffset = circ*(1-pct);
   document.getElementById('ringDay').textContent = 'Day '+dayNum;
+  document.getElementById('ringTotal').textContent = 'of '+cycleLen+' days';
   document.getElementById('ringPhase').textContent = ph.name;
 
-  // Water
   renderWater();
 
-  // Next events
   const map = getDayMap();
   let html = '';
-  for(let i=1;i<=14;i++) {
+  for(let i=1;i<=45;i++) {
     const dd = new Date(td.getTime()+i*DAYS_MS);
     const k = toKey(dd);
-    if(map[k]==='predicted') { html += `<div class="pred-item"><div class="pred-icon" style="background:#FDEDF0">🌸</div><div class="pred-content"><div class="pred-date">${fmtDate(dd.getTime())} <span class="badge badge-next">Next period</span></div><div class="pred-detail">In ${i} days · Expected for ${PERIOD_LEN} days</div></div></div>`; break; }
+    if(map[k]==='predicted') { html += `<div class="pred-item"><div class="pred-icon" style="background:#FDEDF0">🌸</div><div class="pred-content"><div class="pred-date">${fmtDate(dd.getTime())} <span class="badge badge-next">Next period</span></div><div class="pred-detail">In ${i} days · Expected for ${getPeriodLen()} days</div></div></div>`; break; }
     if(map[k]==='pred-fertile') { html += `<div class="pred-item"><div class="pred-icon" style="background:var(--mint-light)">🌿</div><div class="pred-content"><div class="pred-date">${fmtDate(dd.getTime())} <span class="badge badge-fertile">Fertile window</span></div><div class="pred-detail">In ${i} days</div></div></div>`; break; }
     if(map[k]==='ovulation'||map[k]==='pred-ov') { html += `<div class="pred-item"><div class="pred-icon" style="background:var(--peach-light)">🌕</div><div class="pred-content"><div class="pred-date">${fmtDate(dd.getTime())} <span class="badge badge-soon">Ovulation</span></div><div class="pred-detail">In ${i} days</div></div></div>`; break; }
   }
-  if(!html) html = '<div style="font-size:13px;color:var(--text3);padding:8px 0">All clear for now! No events in the next 2 weeks.</div>';
+  if(!html) html = '<div style="font-size:13px;color:var(--text3);padding:8px 0">All clear for now! No events in the next 6 weeks.</div>';
   document.getElementById('nextEvents').innerHTML = html;
 }
 
@@ -814,7 +882,7 @@ function setMoodLog(btn,em,name) {
 }
 
 // ── CALENDAR ──
-let calView = { y:2026, m:5 };
+let calView; // set in init() to the real current month
 function renderCalendar() {
   const map = getDayMap();
   const td = today();
@@ -835,35 +903,60 @@ function renderCalendar() {
     else if(t==='ovulation') cls+=' ovulation';
     else if(t==='fertile') cls+=' fertile';
     else if(t==='predicted') cls+=' predicted';
-    else if(t==='pred-fertile'||t==='pred-ov') cls+=' pred-fertile';
-    h+=`<div class="${cls}">${d}</div>`;
+    else if(t==='pred-ov') cls+=' pred-ov';
+    else if(t==='pred-fertile') cls+=' pred-fertile';
+    h+=`<div class="${cls}" onclick="showDayInfo('${k}','${t}',${dt.getTime()})">${d}</div>`;
   }
   grid.innerHTML=h;
 }
 function prevMonth() { calView.m--; if(calView.m<0){calView.m=11;calView.y--;} renderCalendar(); }
 function nextMonth() { calView.m++; if(calView.m>11){calView.m=0;calView.y++;} renderCalendar(); }
+function goToToday() { const td=today(); calView={y:td.getFullYear(),m:td.getMonth()}; renderCalendar(); }
+
+function showDayInfo(k, t, ts) {
+  const labels = {
+    period: 'Period day 🩸', ovulation: 'Ovulation day 🌕', fertile: 'Fertile window 🌿',
+    predicted: 'Predicted period 🌸', 'pred-ov': 'Predicted ovulation 🌕', 'pred-fertile': 'Predicted fertile window 🌿'
+  };
+  let msg = labels[t] || 'No cycle event';
+  const log = state.logs[k];
+  if(log) {
+    const extra = [];
+    if(log.mood) extra.push('Mood: '+log.mood);
+    if(log.flow && log.flow!=='none') extra.push('Flow: '+log.flow);
+    if(log.symptoms && log.symptoms.length) extra.push(log.symptoms.join(', '));
+    if(extra.length) msg += ' · ' + extra.join(' · ');
+  }
+  showToast(fmtDate(ts) + ': ' + msg);
+}
 
 // ── PREDICTIONS ──
 function renderPredictions() {
   const td = today();
+  const stats = getCycleStats();
+  const periodLen = getPeriodLen();
   const last = state.periods[state.periods.length-1];
+  const monthsAhead = state.settings.monthsAhead || 3;
+  const maxCycles = Math.max(3, Math.ceil((monthsAhead*31)/stats.avgLen) + 1);
   let h='';
-  for(let c=1;c<=4;c++) {
-    const ps = new Date(last+c*CYCLE*DAYS_MS);
-    if(ps<=td) continue;
-    const pe = new Date(ps.getTime()+(PERIOD_LEN-1)*DAYS_MS);
-    const ov = new Date(ps.getTime()+(CYCLE-14)*DAYS_MS);
+  let shown = 0;
+  for(let c=1;c<=maxCycles && shown<4;c++) {
+    const ps = new Date(last + c*stats.avgLen*DAYS_MS);
+    if(ps < td && c===1) continue;
+    const pe = new Date(ps.getTime()+(periodLen-1)*DAYS_MS);
+    const ov = new Date(ps.getTime()+(stats.avgLen-14)*DAYS_MS);
     const fs = new Date(ov.getTime()-4*DAYS_MS);
     const daysTo = Math.round((ps.getTime()-td.getTime())/DAYS_MS);
-    const badge = c===1?'<span class="badge badge-next">Next</span>':'<span class="badge badge-soon">Predicted</span>';
-    const icon = c===1?'🌸':'🌺';
+    const badge = shown===0?'<span class="badge badge-next">Next</span>':'<span class="badge badge-soon">Predicted</span>';
+    const icon = shown===0?'🌸':'🌺';
     h+=`<div class="pred-item">
-      <div class="pred-icon" style="background:${c===1?'#FDEDF0':'#F9EDF9'}">${icon}</div>
+      <div class="pred-icon" style="background:${shown===0?'#FDEDF0':'#F9EDF9'}">${icon}</div>
       <div class="pred-content">
         <div class="pred-date">${fmtDateShort(ps.getTime())} – ${fmtDateShort(pe.getTime())} ${badge}</div>
         <div class="pred-detail">In ${daysTo} days · Fertile: ${fmtDateShort(fs.getTime())} · Ovulation: ~${fmtDateShort(ov.getTime())}</div>
       </div>
     </div>`;
+    shown++;
   }
   document.getElementById('predList').innerHTML=h;
 }
@@ -880,7 +973,7 @@ function addPeriodDate() {
     saveState();
   }
   document.getElementById('addDateInput').value='';
-  renderHome(); renderCalendar(); renderPredictions(); renderPastRecords();
+  renderHome(); renderCalendar(); renderPredictions(); renderPastRecords(); loadCycleSettings();
   showToast('Period date saved! 🌸');
 }
 
@@ -898,7 +991,7 @@ function renderPastRecords() {
 function delPeriod(ts) {
   if(state.periods.length<=1) { showToast('Need at least 1 record'); return; }
   state.periods = state.periods.filter(p=>p!==ts);
-  saveState(); renderHome(); renderCalendar(); renderPredictions(); renderPastRecords();
+  saveState(); renderHome(); renderCalendar(); renderPredictions(); renderPastRecords(); loadCycleSettings();
   showToast('Record removed');
 }
 
@@ -961,6 +1054,55 @@ function loadMetrics() {
 }
 function saveMedNotes() { saveMetric('meds',document.getElementById('medNotes').value); showToast('Saved! 💊'); }
 
+// ── CYCLE SETTINGS ──
+function loadCycleSettings() {
+  const stats = getCycleStats();
+  document.getElementById('autoCycleLen').textContent = stats.autoLen;
+  document.getElementById('setCycleLen').value = state.settings.cycleLenOverride || '';
+  document.getElementById('setPeriodLen').value = state.settings.periodLen || DEFAULT_PERIOD_LEN;
+  document.getElementById('setMonthsAhead').value = state.settings.monthsAhead || 3;
+}
+function saveCycleSettings() {
+  const cl = document.getElementById('setCycleLen').value;
+  const pl = document.getElementById('setPeriodLen').value;
+  const ma = document.getElementById('setMonthsAhead').value;
+  state.settings.cycleLenOverride = cl ? +cl : null;
+  state.settings.periodLen = pl ? +pl : DEFAULT_PERIOD_LEN;
+  state.settings.monthsAhead = ma ? +ma : 3;
+  saveState();
+  renderHome(); renderCalendar(); renderPredictions();
+  document.getElementById('autoCycleLen').textContent = getCycleStats().autoLen;
+}
+
+// ── BACKUP / RESTORE ──
+function exportData() {
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'abhya_health_backup_'+toKey(today())+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded 💾');
+}
+function importData(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if(!data.periods) throw new Error('bad file');
+      state = Object.assign({ settings:{cycleLenOverride:null,periodLen:DEFAULT_PERIOD_LEN,monthsAhead:3} }, data);
+      if(!state.settings) state.settings = { cycleLenOverride: null, periodLen: DEFAULT_PERIOD_LEN, monthsAhead: 3 };
+      saveState();
+      init();
+      showToast('Data restored ✅');
+    } catch(err) { showToast('Invalid backup file'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
 // ── SLEEP ──
 function calcSleep() {
   const bed = document.getElementById('sleepBed').value;
@@ -988,11 +1130,15 @@ function toggleRem(id) {
 
 // ── INSIGHTS ──
 function renderInsights() {
+  const stats = getCycleStats();
   document.getElementById('isCycles').textContent = state.periods.length;
-  if(state.periods.length>1) {
-    let total=0;
-    for(let i=1;i<state.periods.length;i++) total+=Math.round((state.periods[i]-state.periods[i-1])/DAYS_MS);
-    document.getElementById('isAvgLen').textContent = Math.round(total/(state.periods.length-1));
+  document.getElementById('isAvgLen').textContent = stats.avgLen;
+  document.getElementById('isPeriodLen').textContent = getPeriodLen();
+  if(stats.gaps.length) {
+    document.getElementById('isRangeText').textContent =
+      `Cycle range: ${stats.shortest}–${stats.longest} days across ${stats.gaps.length} tracked gap${stats.gaps.length>1?'s':''}.`;
+  } else {
+    document.getElementById('isRangeText').textContent = 'Log a second period date to see your cycle range.';
   }
 }
 
@@ -1002,6 +1148,7 @@ function showScreen(id, btn) {
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
+  if(id==='calendar') { calView = { y: today().getFullYear(), m: today().getMonth() }; renderCalendar(); renderPredictions(); }
   if(id==='insights') renderInsights();
 }
 
