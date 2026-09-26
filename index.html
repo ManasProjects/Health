@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
 <title>Abhya — My Health</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
@@ -34,14 +34,14 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { font-size: 15px; }
-body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; max-width: 420px; margin: 0 auto; position: relative; overflow-x: hidden; }
+html { font-size: 15px; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; max-width: 420px; margin: 0 auto; position: relative; overflow-x: hidden; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 
 /* ── TOP BAR ── */
 .topbar {
   background: var(--surface);
   padding: 18px 20px 14px;
-  position: sticky; top: 0; z-index: 100;
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 100;
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
 }
@@ -57,6 +57,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .greeting strong { display: block; font-size: 16px; color: var(--text); font-weight: 600; }
 .topbar-date { font-size: 11px; color: var(--text3); text-align: right; }
 .topbar-date span { display: block; font-size: 13px; color: var(--rose); font-weight: 500; }
+.sync-pill { font-size: 9px; font-weight: 600; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 20px; margin-top: 4px; display: inline-block; }
+.sync-pill.on { background: var(--mint-light); color: #2E8A66; }
+.sync-pill.off { background: #F0F0F0; color: var(--text3); }
 
 /* ── NAV TABS ── */
 .nav {
@@ -259,8 +262,21 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .screen.active > *:nth-child(5) { animation-delay: 0.16s; }
 
 /* ── TOAST ── */
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 999; transition: transform 0.3s; pointer-events: none; white-space: nowrap; max-width: 90%; text-align: center; }
+.toast { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 999; transition: transform 0.3s; pointer-events: none; white-space: nowrap; max-width: 90%; text-align: center; }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1E1418; --surface: #2A1D22; --surface2: #241A1E;
+    --text: #F5E9EC; --text2: #C9A9B1; --text3: #8C6C74;
+    --border: rgba(244,184,195,0.14);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1E1418; --surface: #2A1D22; --surface2: #241A1E;
+  --text: #F5E9EC; --text2: #C9A9B1; --text3: #8C6C74;
+  --border: rgba(244,184,195,0.14);
+}
 </style>
 </head>
 <body>
@@ -697,16 +713,16 @@ const DAYS_MS = 86400000;
 const DEFAULT_PERIOD_LEN = 5;
 const DEFAULT_CYCLE_LEN = 28;
 
-// ── STATE ──
-// Real logged period start dates (as told by Abhya): 25 Jul 2026 and 27 Aug 2026,
-// plus earlier estimated history kept for trend/average purposes.
-let state = JSON.parse(localStorage.getItem('abhya_state') || 'null') || {
+// ── DEFAULT / SEED STATE ──
+// Corrected real logged period start: 24 Aug 2026 (3-day period). Earlier
+// months kept as rough history so cycle-length averages still make sense.
+const defaultState = {
   periods: [
     new Date(2026,3,26).getTime(),
     new Date(2026,4,25).getTime(),
     new Date(2026,5,24).getTime(),
     new Date(2026,6,25).getTime(),
-    new Date(2026,7,27).getTime()
+    new Date(2026,7,24).getTime()
   ],
   settings: { cycleLenOverride: null, periodLen: DEFAULT_PERIOD_LEN, monthsAhead: 3 },
   water: 0,
@@ -719,9 +735,16 @@ let state = JSON.parse(localStorage.getItem('abhya_state') || 'null') || {
   todayIntensity: '',
   todayMoodLog: ''
 };
+
+// ── STATE ──
+// Saved on this phone only (localStorage). Predictions always recalculate
+// live from today's date + the periods list below — nothing is hardcoded.
+let state = JSON.parse(localStorage.getItem('abhya_state') || 'null') || JSON.parse(JSON.stringify(defaultState));
 if(!state.settings) state.settings = { cycleLenOverride: null, periodLen: DEFAULT_PERIOD_LEN, monthsAhead: 3 };
 
-function saveState() { localStorage.setItem('abhya_state', JSON.stringify(state)); }
+function saveState() {
+  localStorage.setItem('abhya_state', JSON.stringify(state));
+}
 
 // ── DATES ──
 function today() { const d = new Date(); d.setHours(0,0,0,0); return d; }
@@ -1092,7 +1115,7 @@ function importData(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if(!data.periods) throw new Error('bad file');
-      state = Object.assign({ settings:{cycleLenOverride:null,periodLen:DEFAULT_PERIOD_LEN,monthsAhead:3} }, data);
+      state = Object.assign(JSON.parse(JSON.stringify(defaultState)), data);
       if(!state.settings) state.settings = { cycleLenOverride: null, periodLen: DEFAULT_PERIOD_LEN, monthsAhead: 3 };
       saveState();
       init();
